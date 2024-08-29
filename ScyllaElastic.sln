@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ScyllaElastic", "ScyllaElastic.csproj", "{706320C0-7024-4E67-840C-42A9451ED4BD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{706320C0-7024-4E67-840C-42A9451ED4BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{706320C0-7024-4E67-840C-42A9451ED4BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{706320C0-7024-4E67-840C-42A9451ED4BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{706320C0-7024-4E67-840C-42A9451ED4BD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EE74462A-4F0F-48A0-8BAC-F82F75A19266}
+	EndGlobalSection
+EndGlobal

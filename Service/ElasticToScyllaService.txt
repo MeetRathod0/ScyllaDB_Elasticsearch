@@ -1,0 +1,254 @@
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Nest;
+using System.Data;
+
+using ScyllaElastic.Config;
+using ScyllaElastic.Models;
+using Newtonsoft.Json;
+
+
+namespace ScyllaElastic.Service;
+
+public class ElasticToScyllaService: BackgroundService
+{
+    private Configuration config;
+    private readonly IConfiguration _elasticClient;
+    public ElasticToScyllaService(IConfiguration elasticClient)
+    {
+        config = new Configuration(elasticClient);
+        _elasticClient = elasticClient;
+        
+    }
+
+    public async Task  AddInScylla() 
+    {
+        var scroll = new Time(15,TimeUnit.Second);
+        var res = await Configuration.clientES.SearchAsync<ElasticModel>(
+            i => i.Index(Config.Indices.get_data)
+            .Query(q=>q.MatchAll())
+            .Size(10000).Scroll(scroll)
+            );
+        var result = new List<ElasticModel>();
+        var list_ids = new List<string>();
+        try
+            {
+                do
+                { 
+                    if (!res.IsValid || string.IsNullOrEmpty(res.ScrollId))
+                        throw new Exception("Search Error");
+                    if (!res.Documents.Any())
+                        break;
+                    // get _source list
+                    result.AddRange(res.Documents);
+                    // get _id list
+                    list_ids.AddRange(res.Hits.Select(s=>s.Id));
+                    res = await Configuration.clientES.ScrollAsync<ElasticModel>(scroll, res.ScrollId);
+                    //Console.WriteLine(result.Count + " get from " + res.Total);
+                
+                } while (res.Total >= 0 && res.Total >= result.Count && res.Documents.Any() && res.IsValid);
+
+
+                // forloop
+                foreach (ElasticModel model in result) 
+                {
+                    // model name same as table name
+                    stone_data smodel=new stone_data();
+                    smodel.account_date = Convert.ToDateTime(model.account_date);
+                    smodel.additional_cost_percentage = model.additional_cost_percentage;
+                    smodel.additional_packet_percentage = model.additional_packet_percentage;
+                    smodel.analysis_packet_amount = model.analysis_packet_amount;
+                    smodel.analysis_packet_percentage = model.analysis_packet_percentage;
+                    smodel.analysis_packet_rate = model.analysis_packet_rate;
+                    smodel.b2b_best_bid_amount = model.b2b_best_bid_amount;
+                    smodel.b2b_best_bid_dollar = model.b2b_best_bid_dollar;
+                    smodel.b2b_best_bid_packet_rate_difference = model.b2b_best_bid_packet_rate_difference;
+                    smodel.b2b_best_bid_percentage = model.b2b_best_bid_percentage;
+                    smodel.b2b_bidder_count = model.b2b_bidder_count;
+                    smodel.basket_count_customer = model.basket_count_customer;
+                    smodel.bl_data = JsonConvert.SerializeObject(model.bl_data);
+                    smodel.blind_percentage = model.blind_percentage;
+                    smodel.certificate_data = JsonConvert.SerializeObject(model.certificate_data);
+                    smodel.certificate_date = model.certificate_date;
+                    smodel.certificate_info_data = JsonConvert.SerializeObject(model.certificate_info_data);
+                    smodel.certified_age = model.certified_age;
+                    smodel.clarity_data = JsonConvert.SerializeObject(model.clarity_data);
+                    smodel.client_packet_amount = model.client_packet_amount;
+                    smodel.client_packet_offline_packet_rate_difference = model.client_packet_offline_packet_rate_difference;
+                    smodel.client_packet_percentage = model.client_packet_percentage;
+                    smodel.client_packet_rate = model.client_packet_rate;
+                    smodel.color_data = JsonConvert.SerializeObject(model.color_data);
+                    smodel.confirm_id = model.confirm_id;
+                    smodel.country_origin = model.country_origin;
+                    smodel.crown_angle = model.crown_angle;
+                    smodel.crown_height = model.crown_height;
+                    smodel.customer_discount_count = model.customer_discount_count;
+                    smodel.cut_data = JsonConvert.SerializeObject(model.cut_data);
+                    smodel.dayp_best_bid_amount = model.dayp_best_bid_amount;
+                    smodel.dayp_best_bid_dollar = model.dayp_best_bid_dollar;
+                    smodel.dayp_best_bid_packet_rate_difference = model.dayp_best_bid_packet_rate_difference;
+                    smodel.dayp_best_bid_percentage = model.dayp_best_bid_percentage;
+                    smodel.dayp_bidder_count = model.dayp_bidder_count;
+                    smodel.dayp_selection_count_customer = model.dayp_selection_count_customer;
+                    smodel.dayp_selection_count_kam = model.dayp_selection_count_kam;
+                    smodel.dayp_upload_count = model.dayp_upload_count;
+                    smodel.diameter_length = model.diameter_length;
+                    smodel.diameter_ratio = model.diameter_ratio;
+                    smodel.diameter_width = model.diameter_width;
+                    smodel.discuss_alert_date = Convert.ToDateTime(model.discuss_alert_date);
+                    smodel.eligiblity_code = model.eligiblity_code;
+                    smodel.event_end_datetime = model.event_end_datetime;
+                    smodel.event_selection_count_customer = model.event_selection_count_customer;
+                    smodel.event_selection_count_kam = model.event_selection_count_kam;
+                    smodel.event_start_datetime = model.event_start_datetime;
+                    smodel.event_type_name = model.event_type_name;
+                    smodel.extra_percentage = model.extra_percentage;
+                    smodel.first_market_cost_amount = model.first_market_cost_amount;
+                    smodel.first_market_cost_rate = model.first_market_cost_rate;
+                    smodel.first_market_date = model.first_market_date;
+                    smodel.first_market_packet_amount = model.first_market_packet_amount;
+                    smodel.first_market_packet_rate = model.first_market_packet_rate;
+                    smodel.flo_data = JsonConvert.SerializeObject(model.flo_data);
+                    smodel.floro_remark_data = JsonConvert.SerializeObject(model.floro_remark_data);
+                    smodel.gia_certificate_clarity_data = JsonConvert.SerializeObject(model.gia_certificate_clarity_data);
+                    smodel.gia_certificate_color_data = JsonConvert.SerializeObject(model.gia_certificate_color_data);
+                    smodel.gia_certificate_cut_data = JsonConvert.SerializeObject(model.gia_certificate_cut_data);
+                    smodel.gia_certificate_flo_data = JsonConvert.SerializeObject(model.gia_certificate_flo_data);
+                    smodel.gia_job_no = model.gia_job_no;
+                    smodel.gia_job_number = model.gia_job_number;
+                    smodel.girdle_code_max = model.girdle_code_max;
+                    smodel.girdle_code_min = model.girdle_code_min;
+                    smodel.girdle_percentage = model.girdle_percentage;
+                    smodel.grading_remark_data = JsonConvert.SerializeObject(model.grading_remark_data);
+                    smodel.height = model.height;
+                    smodel.hold_age = model.hold_age;
+                    smodel.hold_date = Convert.ToDateTime(model.hold_date);
+                    smodel.hold_id = model.hold_id;
+                    smodel.hrd_certificate_clarity_data = JsonConvert.SerializeObject(model.hrd_certificate_clarity_data);
+                    smodel.hrd_certificate_color_data = JsonConvert.SerializeObject(model.hrd_certificate_color_data);
+                    smodel.hrd_certificate_cut_data = JsonConvert.SerializeObject(model.hrd_certificate_cut_data);
+                    smodel.hrd_certificate_flo_data = JsonConvert.SerializeObject(model.hrd_certificate_flo_data);
+                    smodel.hrd_reference_no = model.hrd_reference_no;
+                    smodel.hrd_reference_number = model.hrd_reference_number;
+                    smodel.igi_certificate_clarity_data = JsonConvert.SerializeObject(model.igi_certificate_clarity_data);
+                    smodel.igi_certificate_color_data = JsonConvert.SerializeObject(model.igi_certificate_color_data);
+                    smodel.igi_certificate_cut_data = JsonConvert.SerializeObject(model.igi_certificate_cut_data);
+                    smodel.igi_certificate_flo_data = JsonConvert.SerializeObject(model.igi_certificate_flo_data);
+                    smodel.igi_document = model.igi_document;
+                    smodel.igi_document_number = model.igi_document_number;
+                    smodel.inward_datetime = model.inward_datetime;
+                    smodel.is_digi_plot = model.is_digi_plot;
+                    smodel.is_inscription_removed = model.is_inscription_removed;
+                    smodel.is_stone_sealed = model.is_stone_sealed;
+                    smodel.issue_carat = model.issue_carat;
+                    smodel.key_to_symbol_data = JsonConvert.SerializeObject(model.key_to_symbol_data);
+                    smodel.lab_comment_data = JsonConvert.SerializeObject(model.lab_comment_data);
+                    smodel.lab_data = JsonConvert.SerializeObject(model.lab_data);
+                    smodel.lab_dollar = model.lab_dollar;
+                    smodel.layout_data = JsonConvert.SerializeObject(model.layout_data);
+                    smodel.lot_data = JsonConvert.SerializeObject(model.lot_data);
+                    smodel.lower_half = model.lower_half;
+                    smodel.market_date = model.market_date;
+                    smodel.mat_remark_data = JsonConvert.SerializeObject(model.mat_remark_data);
+                    smodel.match_order = model.match_order;
+                    smodel.mfg_comment_data = JsonConvert.SerializeObject(model.mfg_comment_data);
+                    smodel.mfg_cost_rate_difference = model.mfg_cost_rate_difference;
+                    smodel.mfg_remark_data = JsonConvert.SerializeObject(model.mfg_remark_data);
+                    smodel.net_sale_amount = model.net_sale_amount;
+                    smodel.net_sale_percentage = model.net_sale_percentage;
+                    smodel.net_sale_rate = model.net_sale_rate;
+                    smodel.offline_packet_market_packet_rate_difference = model.offline_packet_market_packet_rate_difference;
+                    smodel.online_packet_amount = model.online_packet_amount;
+                    smodel.online_packet_offline_packet_rate_difference = model.online_packet_offline_packet_rate_difference;
+                    smodel.online_packet_percentage = model.online_packet_percentage;
+                    smodel.online_packet_rate = model.online_packet_rate;
+                    smodel.order_data = JsonConvert.SerializeObject(model.order_data);
+                    smodel.party_code = model.party_code;
+                    smodel.party_data = JsonConvert.SerializeObject(model.party_data);
+                    smodel.party_kam_data = JsonConvert.SerializeObject(model.party_kam_data);
+                    smodel.party_transaction_code = model.party_transaction_code;
+                    smodel.party_transaction_code  = model.party_transaction_code ;
+                    smodel.pavilion_angle = model.pavilion_angle;
+                    smodel.pavilion_height = model.pavilion_height;
+                    smodel.polish_data = JsonConvert.SerializeObject(model.polish_data);
+                    smodel.polish_remark_data = JsonConvert.SerializeObject(model.polish_remark_data);
+                    smodel.presentation_data = JsonConvert.SerializeObject(model.presentation_data);
+                    smodel.prfs_packet_id = model.prfs_packet_id;
+                    smodel.product_name = model.product_name;
+                    smodel.purchase_rate = model.purchase_rate;
+                    smodel.rapnet_market_rate = model.rapnet_market_rate;
+                    smodel.rate_amt_percentage_diff = JsonConvert.SerializeObject(model.rate_amt_percentage_diff);
+                    smodel.rate_freeze = model.rate_freeze;
+                    smodel.roll_code = model.roll_code;
+                    smodel.sale_transfer_datetime = model.sale_transfer_datetime;
+                    smodel.script = model.script;
+                    smodel.sgs_comment_data = JsonConvert.SerializeObject(model.sgs_comment_data);
+                    smodel.shape_data = JsonConvert.SerializeObject(model.shape_data);
+                    smodel.shape_description = model.shape_description;
+                    smodel.shipment_code = model.shipment_code;
+                    smodel.shipping_data = JsonConvert.SerializeObject(model.shipping_data);
+                    smodel.size_data = JsonConvert.SerializeObject(model.size_data);
+                    smodel.skip_age = model.skip_age;
+                    smodel.srk_certificate_clarity_data = JsonConvert.SerializeObject(model.srk_certificate_clarity_data);
+                    smodel.srk_certificate_color_data = JsonConvert.SerializeObject(model.srk_certificate_color_data);
+                    smodel.srk_certificate_cut_data = JsonConvert.SerializeObject(model.srk_certificate_cut_data);
+                    smodel.srk_certificate_flo_data = JsonConvert.SerializeObject(model.srk_certificate_flo_data);
+                    smodel.srk_certificate_polish_data = JsonConvert.SerializeObject(model.srk_certificate_polish_data);
+                    smodel.srk_certificate_sym_data = JsonConvert.SerializeObject(model.srk_certificate_sym_data);
+                    smodel.star_length = model.star_length;
+                    smodel.stock_vs_sale_data = JsonConvert.SerializeObject(model.stock_vs_sale_data);
+                    smodel.stone_confirm_datetime = model.stone_confirm_datetime;
+                    smodel.stone_current_age = model.stone_current_age;
+                    smodel.stone_hit_data = JsonConvert.SerializeObject(model.stone_hit_data);
+                    smodel.stone_inward_age = model.stone_inward_age;
+                    smodel.stone_original_age = model.stone_original_age;
+                    smodel.stone_revise_data = JsonConvert.SerializeObject(model.stone_revise_data);
+                    smodel.stoneid = model.stoneid;
+                    smodel.sym_data = JsonConvert.SerializeObject(model.sym_data);
+                    smodel.symmentry_remark_data = JsonConvert.SerializeObject(model.symmentry_remark_data);
+                    smodel.system_packet_percentage = model.system_packet_percentage;
+                    smodel.tabled = model.tabled;
+                    smodel.term_percentage = model.term_percentage;
+                    smodel.tinge_col_code = model.tinge_col_code;
+                    smodel.total_depth = model.total_depth;
+                    smodel.transaction_date = Convert.ToDateTime(model.transaction_date);
+                    smodel.transaction_id = model.transaction_id;
+                    smodel.twin_data = JsonConvert.SerializeObject(model.twin_data);
+                    smodel.user_code = model.user_code;
+                    smodel.vendor_clarity_data = JsonConvert.SerializeObject(model.vendor_clarity_data);
+                    smodel.vendor_color_data = JsonConvert.SerializeObject(model.vendor_color_data);
+                    smodel.vendor_cut_data = JsonConvert.SerializeObject(model.vendor_cut_data);
+                    smodel.vendor_floro_data = JsonConvert.SerializeObject(model.vendor_floro_data);
+                    smodel.vendor_issue_carat = model.vendor_issue_carat;
+                    smodel.vendor_polish_data = JsonConvert.SerializeObject(model.vendor_polish_data);
+                    smodel.vendor_stone_inward_age = model.vendor_stone_inward_age;
+                    smodel.vendor_sym_data = JsonConvert.SerializeObject(model.vendor_sym_data);
+                    smodel.weekly_volume_percentage = model.weekly_volume_percentage;
+                    // insert into scylla
+                   Configuration.mapper.Insert<stone_data>(smodel);
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+            finally {
+                var clearScrollResponse = Configuration.clientES.ClearScrollAsync(c=>c.ScrollId(res.ScrollId));
+            }
+
+
+    }
+
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        return base.StartAsync(cancellationToken);
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        await AddInScylla();
+    }
+
+}
